@@ -43,22 +43,32 @@ def getSongsFromMultiplePlaylists(inputfile: str) -> pd.DataFrame:
     # newDF.to_csv(songsFileName, index=False)
     return newDF
 
-def updateAndImport():
-    writeCSVFromList(getLikedTracks(), "liked.csv")
-    updatePlaylistCSV('playlists/inputPlaylists.csv')
-    updatePlaylistCSV('playlists/playlists.csv')
-    getSongsFromMultiplePlaylists('playlists/inputPlaylists.csv').to_csv('exports/inputsongs.csv')
-    getSongsFromMultiplePlaylists('playlists/playlists.csv').to_csv('exports/playlistSongs.csv')
-
 def getDuplicates(inputFile: str) -> pd.DataFrame:
     df = pd.read_csv(inputFile)
     title = df["title"] # can also use id for "true" duplicates
     return df[title.isin(title[title.duplicated()])].sort_values("title")
 
+def getSongsInCommon(fileA: str, fileB: str) -> pd.DataFrame:
+    dfa = pd.read_csv(fileA)
+    dfb = pd.read_csv(fileB)
 
+    inner = dfa.loc[dfa['title'].isin(dfb['title'])]
+    inner2 = dfb.loc[dfb['title'].isin(dfa['title'])]
 
-df = pd.read_csv('exports/playlistSongs.csv')
-df[df.origin.str.isalpha()].to_csv('filtered/root.csv', index=False)
+    return pd.concat([inner, inner2]).sort_values(by=['title'])
+    
+def getRootPlaylists():
+    df = pd.read_csv('exports/playlistSongs.csv')
+    return df[df.origin.str.isalpha()]
 
-getDuplicates('filtered/root.csv').to_csv('filtered/root_duplicates.csv', index=False)
+def updateAndImport():
+    writeCSVFromList(getLikedTracks(), "likedSongs.csv")
+    updatePlaylistCSV('playlists/inputPlaylists.csv')
+    updatePlaylistCSV('playlists/playlists.csv')
+    getSongsFromMultiplePlaylists('playlists/inputPlaylists.csv').to_csv('exports/inputSongs.csv')
+    getSongsFromMultiplePlaylists('playlists/playlists.csv').to_csv('exports/playlistSongs.csv')
 
+def analyze():
+    getRootPlaylists().to_csv('filtered/root.csv', index=False)
+    getDuplicates('filtered/root.csv').to_csv('filtered/root_duplicates.csv', index=False)
+    getSongsInCommon('filtered/root.csv', 'exports/inputSongs.csv').to_csv('output/alreadySaved.csv', index=False)
