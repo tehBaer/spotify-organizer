@@ -37,8 +37,8 @@ def getSongsFromPlaylist(playlist_row: pd.Series) -> list:
     return songList
 
 
-def getSongsFromMultiplePlaylists(inputfile: str) -> pd.DataFrame:
-    df = pd.read_csv(inputfile)
+def getSongsFromMultiplePlaylists(playlistFile: str) -> pd.DataFrame:
+    df = pd.read_csv(playlistFile)
     newDF = pd.DataFrame(columns=['title', 'artist', 'id', 'origin'])
     for i, row in df.iterrows():
         songs = getSongsFromPlaylist(row)
@@ -48,11 +48,14 @@ def getSongsFromMultiplePlaylists(inputfile: str) -> pd.DataFrame:
     return newDF
 
 
-def getDuplicates(inputFile: str) -> pd.DataFrame:
-    df = pd.read_csv(inputFile)
+def getDuplicates(songFile: str) -> pd.DataFrame:
+    df = pd.read_csv(songFile)
     title = df["title"]  # can also use id for "true" duplicates
     return df[title.isin(title[title.duplicated()])].sort_values("title")
 
+def getRootPlaylists():
+    df = pd.read_csv('exports/playlistSongs.csv')
+    return df[df.origin.str.isalpha()]
 
 def getSongsInCommon(fileA: str, fileB: str) -> pd.DataFrame:
     dfa = pd.read_csv(fileA)
@@ -63,9 +66,12 @@ def getSongsInCommon(fileA: str, fileB: str) -> pd.DataFrame:
 
     return pd.concat([inner, inner2]).sort_values(by=['title'])
 
-def getRootPlaylists():
-    df = pd.read_csv('exports/playlistSongs.csv')
-    return df[df.origin.str.isalpha()]
+def getMissingLiked():
+    liked = pd.read_csv('exports/likedSongs.csv')
+    rooted = pd.read_csv('filtered/root.csv')
+    missing = liked.loc[~liked['title'].isin(rooted['title'])]
+    return missing
+
 
 
 def updateAndImport():
@@ -86,5 +92,5 @@ def analyze():
                      'exports/inputSongs.csv').to_csv('output/alreadySaved.csv', index=False)
 
 
-getLikedTracks().to_csv("exports/likedSongs.csv", index=False)
 
+getMissingLiked().to_csv('output/missing.csv', index=False)
