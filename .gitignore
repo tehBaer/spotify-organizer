@@ -1,0 +1,8 @@
+.env
+exports/*
+tutorial/
+*.csv
+*.cache
+_*
+temp*
+*.json
