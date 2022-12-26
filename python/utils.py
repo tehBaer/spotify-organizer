@@ -13,9 +13,9 @@ import json
 #             track['id']])
 #     return output
 
-def formatList(input, playlist_name=' '):
+def formatList(inputList: str, playlist_name=' ') -> list:
     output = []
-    for element in input:
+    for element in inputList:
         track = element['track']
         output.append(
             [track['name'],
@@ -26,7 +26,7 @@ def formatList(input, playlist_name=' '):
             ])
     return output
 
-def exportCSV(inputList, fileName):
+def exportCSV(inputList: str, fileName: str):
     df = pd.DataFrame(inputList)#, columns=['Title', 'Creator', 'id'])
     df.to_csv('exports/' + fileName + '.csv')
 
