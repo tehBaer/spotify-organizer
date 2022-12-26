@@ -33,35 +33,32 @@ def getSongsFromPlaylist(playlist_row: pd.Series) -> list:
     print("Extracting songs from ", playlist_row['name'])
     return songList
 
-def exportAllSongs(inputfile: str, songsFileName: str):
+def getSongsFromMultiplePlaylists(inputfile: str) -> pd.DataFrame:
     df=pd.read_csv(inputfile)
     newDF = pd.DataFrame(columns=['title', 'artist', 'id', 'origin'])
     for i, row in df.iterrows():
         songs = getSongsFromPlaylist(row)
         for song in songs:
             newDF.loc[len(newDF)] = song
-    newDF.to_csv(songsFileName, index=False)
+    # newDF.to_csv(songsFileName, index=False)
+    return newDF
 
 def updateAndImport():
-    writeCSV(getLikedTracks(), "liked.csv")
+    writeCSVFromList(getLikedTracks(), "liked.csv")
     updatePlaylistCSV('playlists/inputPlaylists.csv')
     updatePlaylistCSV('playlists/playlists.csv')
-    exportAllSongs('playlists/inputPlaylists.csv', 'exports/inputsongs.csv')
-    exportAllSongs('playlists/playlists.csv', 'exports/playlistSongs.csv')
+    getSongsFromMultiplePlaylists('playlists/inputPlaylists.csv').to_csv('exports/inputsongs.csv')
+    getSongsFromMultiplePlaylists('playlists/playlists.csv').to_csv('exports/playlistSongs.csv')
 
-def writeDuplicates(inputFile: str, outputFile: str):
+def getDuplicates(inputFile: str) -> pd.DataFrame:
     df = pd.read_csv(inputFile)
     title = df["title"] # can also use id for "true" duplicates
-    x = df[title.isin(title[title.duplicated()])].sort_values("title")
-    x.to_csv(outputFile)
+    return df[title.isin(title[title.duplicated()])].sort_values("title")
 
 
-# writeDuplicates()
 
 df = pd.read_csv('exports/playlistSongs.csv')
-rslt_df = df[df.origin.str.isalpha()]
+df[df.origin.str.isalpha()].to_csv('filtered/root.csv', index=False)
 
+getDuplicates('filtered/root.csv').to_csv('filtered/root_duplicates.csv', index=False)
 
-
-rslt_df.to_csv('filtered/root.csv')
-writeDuplicates('filtered/root.csv', 'filtered/root_duplicates.csv')

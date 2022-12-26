@@ -26,7 +26,7 @@ def formatList(inputList: str, playlist_name=' ') -> list:
             ])
     return output
 
-def writeCSV(inputList: str, fileName: str):
+def writeCSVFromList(inputList: str, fileName: str):
     df = pd.DataFrame(inputList)#, columns=['Title', 'Creator', 'id'])
     df.to_csv('exports/' + fileName)
 
