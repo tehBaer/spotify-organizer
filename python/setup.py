@@ -29,3 +29,5 @@ def extract_id(PLAYLIST_LINK: str) -> str:
         raise ValueError(
             "Expected format: https://open.spotify.com/playlist/...")
     return str(playlist_uri)
+
+sp = setScope('user-library-read')

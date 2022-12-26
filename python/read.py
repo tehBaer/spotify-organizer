@@ -90,7 +90,4 @@ def analyze():
         'filtered/root.csv').to_csv('filtered/root_duplicates.csv', index=False)
     getSongsInCommon('filtered/root.csv',
                      'exports/inputSongs.csv').to_csv('output/alreadySaved.csv', index=False)
-
-
-
-getMissingLiked().to_csv('output/missing.csv', index=False)
+    getMissingLiked().to_csv('output/missing.csv', index=False)
