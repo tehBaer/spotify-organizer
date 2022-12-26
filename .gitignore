@@ -6,3 +6,4 @@ tutorial/
 _*
 temp*
 *.json
+.DS_store

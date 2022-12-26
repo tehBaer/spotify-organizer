@@ -43,18 +43,25 @@ def exportAllSongs(inputfile: str, songsFileName: str):
     newDF.to_csv(songsFileName, index=False)
 
 def updateAndImport():
-    exportCSV(getLikedTracks(), "liked")
+    writeCSV(getLikedTracks(), "liked.csv")
     updatePlaylistCSV('playlists/inputPlaylists.csv')
     updatePlaylistCSV('playlists/playlists.csv')
     exportAllSongs('playlists/inputPlaylists.csv', 'exports/inputsongs.csv')
     exportAllSongs('playlists/playlists.csv', 'exports/playlistSongs.csv')
 
-def duplicates():
-    df = pd.read_csv('exports/playlistSongs.csv')
-    title = df["title"]
+def writeDuplicates(inputFile: str, outputFile: str):
+    df = pd.read_csv(inputFile)
+    title = df["title"] # can also use id for "true" duplicates
     x = df[title.isin(title[title.duplicated()])].sort_values("title")
-    x.to_csv('duplicates.csv')
+    x.to_csv(outputFile)
 
-exportAllSongs('playlists/inputPlaylists.csv', 'exports/inputsongs.csv')
 
-# duplicates()
+# writeDuplicates()
+
+df = pd.read_csv('exports/playlistSongs.csv')
+rslt_df = df[df.origin.str.isalpha()]
+
+
+
+rslt_df.to_csv('filtered/root.csv')
+writeDuplicates('filtered/root.csv', 'filtered/root_duplicates.csv')

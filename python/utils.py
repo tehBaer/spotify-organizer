@@ -26,9 +26,9 @@ def formatList(inputList: str, playlist_name=' ') -> list:
             ])
     return output
 
-def exportCSV(inputList: str, fileName: str):
+def writeCSV(inputList: str, fileName: str):
     df = pd.DataFrame(inputList)#, columns=['Title', 'Creator', 'id'])
-    df.to_csv('exports/' + fileName + '.csv')
+    df.to_csv('exports/' + fileName)
 
 
 def exportJSON(inputDict, filename):
