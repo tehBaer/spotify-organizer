@@ -6,7 +6,7 @@ sp = setup.setScope('user-library-read')
 
 def getLikedTracks(limit_step=50) -> list:
     tracks = []
-    for offset in range(0, 10000, limit_step):
+    for offset in range(0, 100, limit_step):
         print(offset)
         response = sp.current_user_saved_tracks(
             limit=limit_step,
@@ -72,3 +72,8 @@ def analyze():
     getRootPlaylists().to_csv('filtered/root.csv', index=False)
     getDuplicates('filtered/root.csv').to_csv('filtered/root_duplicates.csv', index=False)
     getSongsInCommon('filtered/root.csv', 'exports/inputSongs.csv').to_csv('output/alreadySaved.csv', index=False)
+
+# writeCSVFromList(getLikedTracks(), "likedSongs.csv")
+
+
+pd.DataFrame(getLikedTracks(), columns=['title', 'artist', 'id', 'origin']).to_csv("likedSongs.csv", index=False)
