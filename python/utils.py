@@ -1,14 +1,14 @@
 import pandas as pd
 import json
 
-def formatList(inputList: str, playlist_name=' ') -> pd.DataFrame:
+def formatAndFramify(inputList: str, playlist_name=' ') -> pd.DataFrame:
     output = []
     for element in inputList:
         track = element['track']
         output.append(
             [track['name'],
-            # TODO: inkluder eventuelle andre artister
-            track['artists'][0]['name'],
+            track['artists'][0]['name'],# TODO: inkluder alle artister i samme celel
+
             track['id']
             , playlist_name
             ])
