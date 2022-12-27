@@ -30,22 +30,16 @@ def trackifyIDs(id_list: list) -> list:
 
 
 def addTracks(username: str, playlistRow:pd.Series, trackList:list):
-    """
+    
+    # find and remove current tracks
     currentTracks = getSongsFromPlaylist(playlistRow)
-    print(currentTracks)
-    print(currentTracks['id'])
     xy = trackifyIDs(currentTracks['id'])
-    print("\n\n", xy)
-    sp.user_playlist_remove_all_occurrences_of_tracks('bjorntehbear', playlistRow['id'][0], xy)
-    """
-    
-    #remove them
-    
-    # for each 100 tracks
+    sp.user_playlist_remove_all_occurrences_of_tracks(username, playlistRow['id'], xy)
+        
+    # TODO for each 100 tracks
         # add them to the playlist
     
-    # sp.user_playlist_replace_tracks(username, id, trackList) # why [0]?
-
+    sp.user_playlist_add_tracks(username, playlistRow['id'], trackList)
 
 
 def combinePlaylists(playlistNames: list, playlistName:str):

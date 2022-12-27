@@ -14,10 +14,10 @@ def getLikedTracks(limit_step=50) -> pd.DataFrame:
         )
 
         if len(response['items']) == 0:
-            return pd.DataFrame(formatList(tracks), columns=['title', 'artist', 'id', 'origin'])
+            return formatList(tracks)
 
         tracks.extend(response['items'])
-    return pd.DataFrame(formatList(tracks), columns=['title', 'artist', 'id', 'origin'])
+    return formatList(tracks)
 
 
 def updatePlaylistCSV(filename: str):
@@ -28,7 +28,7 @@ def updatePlaylistCSV(filename: str):
     df.to_csv(filename, index=False)
 
 
-def getSongsFromPlaylist(playlist_row: pd.Series) -> list:
+def getSongsFromPlaylist(playlist_row: pd.Series) -> pd.DataFrame:
     rawList = sp.user_playlist('bjorntehbear', playlist_row['id'], fields='tracks')[
         'tracks']['items'] 
     songList = formatList(rawList, playlist_row['name'])

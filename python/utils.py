@@ -1,7 +1,7 @@
 import pandas as pd
 import json
 
-def formatList(inputList: str, playlist_name=' ') -> list:
+def formatList(inputList: str, playlist_name=' ') -> pd.DataFrame:
     output = []
     for element in inputList:
         track = element['track']
@@ -12,7 +12,7 @@ def formatList(inputList: str, playlist_name=' ') -> list:
             track['id']
             , playlist_name
             ])
-    return output
+    return pd.DataFrame(output, columns=['title', 'artist', 'id', 'origin'])
 
 
 def exportJSON(inputDict, filename):
