@@ -20,19 +20,39 @@ def generatePlaylist(playlistName: str, tracks: list, playlistOverview: str): # 
         print('\nCreating', playlistName, '\n')
     else:
         print('\n', playlistName, 'already exists\n')  # if playlist exist
-    row = df.loc[df['name']==playlistName]
-    sp.user_playlist_replace_tracks('bjorntehbear', row['id'][0], tracks) # why [0]?
+    playlist_row = df.loc[df['name']==playlistName].squeeze()
+    addTracks('bjorntehbear', playlist_row, tracks)
 
 
 
+def trackifyIDs(id_list: list) -> list:
+    return ["spotify:track:" + track for track in id_list]
 
 
-df=pd.read_csv('exports/playlistSongs.csv')
-# id_list=df.loc[df['origin']=='MYSTIKK']['id'].tolist()
-id_list=df.loc[df['origin'].isin(['MYSTIKK', 'RO'])]['id'].tolist()
+def addTracks(username: str, playlistRow:pd.Series, trackList:list):
+    """
+    currentTracks = getSongsFromPlaylist(playlistRow)
+    print(currentTracks)
+    print(currentTracks['id'])
+    xy = trackifyIDs(currentTracks['id'])
+    print("\n\n", xy)
+    sp.user_playlist_remove_all_occurrences_of_tracks('bjorntehbear', playlistRow['id'][0], xy)
+    """
+    
+    #remove them
+    
+    # for each 100 tracks
+        # add them to the playlist
+    
+    # sp.user_playlist_replace_tracks(username, id, trackList) # why [0]?
 
-tracks=(["spotify:track:" + track for track in id_list])
 
-generatePlaylist('🔈 smelt mystikk', tracks, 'generated/generatedPlaylists.csv')
 
+def combinePlaylists(playlistNames: list, playlistName:str):
+    df=pd.read_csv('exports/playlistSongs.csv')
+    id_list=df.loc[df['origin'].isin(playlistNames)]['id'].tolist()
+    tracks=trackifyIDs(id_list)
+    generatePlaylist(playlistName, tracks, 'generated/generatedPlaylists.csv')
+
+combinePlaylists(['MYSTIKK', 'RO'], '🔈 mystikk ro')
 

@@ -4,7 +4,6 @@ from IPython.display import display
 
 sp = setup.setScope('user-library-read')
 
-
 def getLikedTracks(limit_step=50) -> pd.DataFrame:
     tracks = []
     for offset in range(0, 10000, limit_step):
@@ -31,7 +30,7 @@ def updatePlaylistCSV(filename: str):
 
 def getSongsFromPlaylist(playlist_row: pd.Series) -> list:
     rawList = sp.user_playlist('bjorntehbear', playlist_row['id'], fields='tracks')[
-        'tracks']['items']
+        'tracks']['items'] 
     songList = formatList(rawList, playlist_row['name'])
     print("Extracting songs from ", playlist_row['name'])
     return songList
