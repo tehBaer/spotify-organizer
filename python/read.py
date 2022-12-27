@@ -4,7 +4,9 @@ from IPython.display import display
 
 sp = setup.setScope('user-library-read')
 
-def updatePlaylistCSV(filename: str): #TODO: make this smarter. perhaps make a get100playlist-function
+
+# TODO: make this smarter. perhaps make a get100playlist-function
+def updatePlaylistCSV(filename: str):
     df = pd.read_csv(filename)  # Must not contain empty rows
     df['id'] = df.url.apply(lambda x: setup.extract_id(x))
     df['name'] = df.id.apply(lambda x: (sp.user_playlist(
@@ -12,9 +14,10 @@ def updatePlaylistCSV(filename: str): #TODO: make this smarter. perhaps make a g
     df.to_csv(filename, index=False)
 
 
-def getLikedTracks(limit_step=50) -> pd.DataFrame:
+def getLikedTracks(amount=10000) -> pd.DataFrame:
+    limit_step = 50
     tracks = []
-    for offset in range(0, 10000, limit_step):
+    for offset in range(0, amount, limit_step):
         print(offset)
         response = sp.current_user_saved_tracks(
             limit=limit_step,
@@ -27,20 +30,22 @@ def getLikedTracks(limit_step=50) -> pd.DataFrame:
         tracks.extend(response['items'])
     return formatAndFramify(tracks)
 
+
 def getSongsFromPlaylist(playlist_row: pd.Series) -> pd.DataFrame:
     rawList = sp.user_playlist('bjorntehbear', playlist_row['id'], fields='tracks')[
-        'tracks']['items'] 
+        'tracks']['items']
     songList = formatAndFramify(rawList, playlist_row['name'])
     print("Extracting songs from ", playlist_row['name'])
     return songList
 
+
 def getSongsFromMultiplePlaylists(playlistOverviewFile: str) -> pd.DataFrame:
     df = pd.read_csv(playlistOverviewFile)
     allSongs = pd.DataFrame(columns=['title', 'artist', 'id', 'origin'])
-    for i, row in df.iterrows(): #stupid way to do this
+    for i, row in df.iterrows():
         songs = getSongsFromPlaylist(row)
-        for song in songs:
-            allSongs.loc[len(allSongs)] = song
+        allSongs = pd.concat([allSongs, songs], ignore_index=True)
+        # print(i)
     return allSongs
 
 
@@ -49,9 +54,11 @@ def getDuplicates(songFile: str) -> pd.DataFrame:
     title = df["title"]  # can also use id for "true" duplicates
     return df[title.isin(title[title.duplicated()])].sort_values("title")
 
+
 def getRootPlaylists():
     df = pd.read_csv('exports/playlistSongs.csv')
     return df[df.origin.str.isalpha()]
+
 
 def getSongsInCommon(fileA: str, fileB: str) -> pd.DataFrame:
     dfa = pd.read_csv(fileA)
@@ -62,6 +69,7 @@ def getSongsInCommon(fileA: str, fileB: str) -> pd.DataFrame:
 
     return pd.concat([inner, inner2]).sort_values(by=['title'])
 
+
 def getMissingLiked():
     liked = pd.read_csv('exports/likedSongs.csv')
     rooted = pd.read_csv('filtered/root.csv')
@@ -70,13 +78,13 @@ def getMissingLiked():
 
 
 def updateAndImport():
-    getLikedTracks().to_csv("exports/likedSongs.csv", index=False)
+    # getLikedTracks().to_csv("exports/likedSongs.csv", index=False)
     updatePlaylistCSV('playlists/inputPlaylists.csv')
     updatePlaylistCSV('playlists/playlists.csv')
     getSongsFromMultiplePlaylists(
-        'playlists/inputPlaylists.csv').to_csv('exports/inputSongs.csv')
+        'playlists/inputPlaylists.csv').to_csv('exports/inputSongs.csv', index=False)
     getSongsFromMultiplePlaylists(
-        'playlists/playlists.csv').to_csv('exports/playlistSongs.csv')
+        'playlists/playlists.csv').to_csv('exports/playlistSongs.csv', index=False)
 
 
 def analyze():
