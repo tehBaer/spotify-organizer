@@ -2,17 +2,14 @@ import setup
 from utils import *
 from IPython.display import display
 
-sp = setup.setScope('user-library-read')
+sp = setup.setScope('user-library-read playlist-read-private')
 
-
-# TODO: make this smarter. perhaps make a get100playlist-function
-def updatePlaylistCSV(filename: str):
-    df = pd.read_csv(filename)  # Must not contain empty rows
-    df['id'] = df.url.apply(lambda x: setup.extract_id(x))
-    df['name'] = df.id.apply(lambda x: (sp.user_playlist(
-        'bjorntehbear', fields='name', playlist_id=str(x)))['name'])
-    df.to_csv(filename, index=False)
-
+def fetchPlaylists(amount: int):
+    playlists=[]
+    for offset in range(0, amount, 50):
+        response = sp.current_user_playlists(50, offset)['items']
+        playlists.extend(formatPlaylists(response))
+    return pd.DataFrame(playlists, columns=['name', 'url', 'id'])
 
 def getLikedTracks(amount=10000) -> pd.DataFrame:
     limit_step = 50
@@ -57,7 +54,7 @@ def getDuplicates(songFile: str) -> pd.DataFrame:
 
 def getRootPlaylists():
     df = pd.read_csv('exports/playlistSongs.csv')
-    return df[df.origin.str.isalpha()]
+    return df[df.origin.str[0].str.isalpha()]
 
 
 def getSongsInCommon(fileA: str, fileB: str) -> pd.DataFrame:
@@ -78,9 +75,7 @@ def getMissingLiked():
 
 
 def updateAndImport():
-    # getLikedTracks().to_csv("exports/likedSongs.csv", index=False)
-    updatePlaylistCSV('playlists/inputPlaylists.csv')
-    updatePlaylistCSV('playlists/playlists.csv')
+    getLikedTracks().to_csv("exports/likedSongs.csv", index=False)
     getSongsFromMultiplePlaylists(
         'playlists/inputPlaylists.csv').to_csv('exports/inputSongs.csv', index=False)
     getSongsFromMultiplePlaylists(
@@ -95,5 +90,5 @@ def analyze():
                      'exports/inputSongs.csv').to_csv('output/alreadySaved.csv', index=False)
     getMissingLiked().to_csv('output/missing.csv', index=False)
 
-updateAndImport()
-analyze()
+
+x = fetchPlaylists(1000)

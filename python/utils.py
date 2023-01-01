@@ -14,9 +14,13 @@ def formatAndFramify(inputList: str, playlist_name=' ') -> pd.DataFrame:
             ])
     return pd.DataFrame(output, columns=['title', 'artist', 'id', 'origin'])
 
+def formatPlaylists(playlistList: list) -> pd.DataFrame:
+    output = []
+    for playlist in playlistList:
+        output.append([playlist['name'], playlist['external_urls']['spotify'], playlist['id']])
+    return output
 
-def exportJSON(inputDict, filename):
+def exportJSON(inputDict, filename): #helper function for coding
     x=json.dumps(inputDict)
     with open(filename, 'w') as outfile:
         outfile.write(x)
-    # return x

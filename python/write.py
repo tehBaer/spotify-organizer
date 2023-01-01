@@ -7,6 +7,7 @@ import random
 
 sp = setup.setScope('playlist-modify-public')
 
+
 def generatePlaylist(playlistName: str, tracks: list, playlistOverview: str):
     # TODO: add "tracks" as dataframe(?)
     df = pd.read_csv(playlistOverview)
@@ -35,19 +36,24 @@ def addTracks(username: str, playlistRow: pd.Series, trackList: list):
     # API caps at 100 at a time
     # finds and removes current tracks
     currentTracks = getSongsFromPlaylist(playlistRow)
-    tracks = trackifyIDs(currentTracks['id'])
-    times = math.ceil(len(tracks) / 100)
-    for i in range(0, times):
-        next100 = tracks[:100]
-        tracks = tracks[100:]
-        sp.user_playlist_add_tracks(username, playlistRow['id'], tracks)
-        i += 1
-        sp.user_playlist_remove_all_occurrences_of_tracks(
-            username, playlistRow['id'], tracks)
+    if len(currentTracks) > 0:
+        tracks = trackifyIDs(currentTracks['id'])
+        times = math.ceil(len(tracks) / 100)
+        size = len(currentTracks)
+        for i in range(0, times):
+            print("removing " + str(i+1) + "00 of ", str(size))
+            next100 = tracks[:100]
+            tracks = tracks[100:]
+            # sp.user_playlist_add_tracks(username, playlistRow['id'], tracks)
+            i += 1
+            sp.user_playlist_remove_all_occurrences_of_tracks(
+                username, playlistRow['id'], next100)
 
     # add tracks
     times = math.ceil(len(trackList) / 100)
+    size2 = len(trackList)
     for i in range(0, times):
+        print("adding " + str(i+1) + "00 of " + str(size2))
         next100 = trackList[:100]
         trackList = trackList[100:]
         sp.user_playlist_add_tracks(username, playlistRow['id'], next100)
@@ -64,5 +70,6 @@ def combinePlaylists(playlistNames: list, playlistName: str):  # TODO: add likev
 
 # combinePlaylists(['MYSTIKK', 'OMINOUS', "SMELT AF", "🐾 brink hypno"], '🔈 smelt ominous mystikk')
 
+# 5cccWTfWOylPRItyGM0pND og 5v8tkWxBbFuRwpS7ou18SN var i en liste men ble satt som missing
 missingDF = pd.read_csv('output/missing.csv')
 generatePlaylist("<missing liked>", trackifyIDs(missingDF['id']), 'generated/generatedPlaylists.csv')
