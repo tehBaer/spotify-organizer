@@ -50,25 +50,29 @@ def fetchSongsFromMultiplePlaylists(playlistOverviewFile: str) -> pd.DataFrame:
     for i, row in df.iterrows():
         songs = getSongsFromPlaylist(row)
         allSongs = pd.concat([allSongs, songs], ignore_index=True)
-        print("?")
-        print(i)
+        # print("?")
+        # print(i)
     return allSongs
 
 
-def getDuplicates(songFile: str) -> pd.DataFrame:
-    df = pd.read_csv(songFile)
-    title = df["title"]  # can also use id for "true" duplicates
-    return df[title.isin(title[title.duplicated()])].sort_values("title")
-
 def getRootPlaylists() -> pd.DataFrame:
-    df = pd.read_csv('exports/playlistLibrary.csv')
+    df = pd.read_csv('fetched/playlists_all.csv')
     startIndex = df.index[df['name']=="__start__"].tolist()[0]
     stopIndex = df.index[df['name']=="__stop__"].tolist()[0]
     return df[startIndex+1:stopIndex]
 
 def getAtomicPlaylists():
-    df = pd.read_csv('exports/playlistSongs.csv')
-    return df[df.origin.str[0].str.isalpha()]
+    df = pd.read_csv('filtered/playlists_root.csv')
+    return df[df.name.str[0].str.isalpha()]
+
+def getInputPlaylists():
+    df = pd.read_csv('fetched/playlists_all.csv')
+    return df[df.name.str[0] == "["]
+
+def getDuplicates(songFile: str) -> pd.DataFrame:
+    df = pd.read_csv(songFile)
+    title = df["title"]  # can also use id for "true" duplicates
+    return df[title.isin(title[title.duplicated()])].sort_values("title")
 
 
 def getSongsInCommon(fileA: str, fileB: str) -> pd.DataFrame:
@@ -82,31 +86,40 @@ def getSongsInCommon(fileA: str, fileB: str) -> pd.DataFrame:
 
 
 def getMissingLiked():
-    liked = pd.read_csv('exports/likedSongs.csv')
-    atmoified = pd.read_csv('filtered/atomic.csv')
+    liked = pd.read_csv('fetched/songs_liked.csv')
+    atmoified = pd.read_csv('filtered/songs_atomic.csv')
     missing = liked.loc[~liked['title'].isin(atmoified['title'])]
+    # missing = liked.loc[~liked['title'].isin(atmoified['title'])]
+    #TODO also check if it is in an input list
+    # TODO check if Pink Floyd
     return missing
 
 
 def fetchAndFilter():
-    fetchAllPlaylists(1000).to_csv('exports/playlistLibrary.csv', index=False)
-    getRootPlaylists().to_csv('filtered/root.csv', index=False)
-    getAtomicPlaylists().to_csv('filtered/atomic.csv', index=False)
+    fetchAllPlaylists(1000).to_csv('fetched/playlists_all.csv', index=False)
 
-    fetchLikedTracks().to_csv("exports/likedSongs.csv", index=False)
+    getRootPlaylists().to_csv('filtered/playlists_root.csv', index=False)
+    getAtomicPlaylists().to_csv('filtered/playlists_atomic.csv', index=False)
+    getInputPlaylists().to_csv('filtered/playlists_input.csv', index=False)
+
+    fetchLikedTracks().to_csv("fetched/songs_liked.csv", index=False)
 
     fetchSongsFromMultiplePlaylists(
-        'playlists/inputPlaylists.csv').to_csv('exports/inputSongs.csv', index=False)
+        'filtered/playlists_root.csv').to_csv('filtered/songs_root.csv', index=False)
+
+    # TODO: ineffektivt. De to neste burde filtrere, ikke fetche alle sangene på nytt
     fetchSongsFromMultiplePlaylists(
-        'playlists/playlists.csv').to_csv('exports/playlistSongs.csv', index=False)
+        'filtered/playlists_atomic.csv').to_csv('filtered/songs_atomic.csv', index=False)
+
+    fetchSongsFromMultiplePlaylists(
+        'filtered/playlists_input.csv').to_csv('filtered/songs_input.csv', index=False)
 
 def analyze():
     getDuplicates(
-        'filtered/atomic.csv').to_csv('filtered/atomic_duplicates.csv', index=False)
-    getSongsInCommon('filtered/atomic.csv',
-                     'exports/inputSongs.csv').to_csv('output/alreadySaved.csv', index=False)
+        'filtered/songs_atomic.csv').to_csv('output/songs_atomic_duplicates.csv', index=False)
+    getSongsInCommon('filtered/songs_atomic.csv',
+                     'filtered/songs_input.csv').to_csv('output/alreadySaved.csv', index=False)
     getMissingLiked().to_csv('output/missing.csv', index=False)
 
-# fetchAllPlaylists(1000).to_csv('exports/playlistLibrary.csv', index=False)
-
-getRootPlaylists().to_csv("testing.csv", index=False)
+# fetchAndFilter()
+# analyze()

@@ -8,7 +8,7 @@ import random
 sp = setup.setScope('playlist-modify-public')
 
 
-def generatePlaylist(playlistName: str, tracks: list, playlistOverview: str):
+def generatePlaylist(playlistName: str, tracks: list, playlistOverview: str, desc=""):
     # TODO: add "tracks" as dataframe(?)
     df = pd.read_csv(playlistOverview)
     if df[df['name'].isin([playlistName])].empty:  # if playlist does not exist
@@ -20,6 +20,8 @@ def generatePlaylist(playlistName: str, tracks: list, playlistOverview: str):
         df.to_csv(playlistOverview, index=False)
         print('\nCreating', playlistName, '\n')
         # TODO: add explanation in playlist_change_details()
+        sp.playlist_change_details(
+            x['id'], description=desc.strip("[]").replace("'", ""))
     else:
         print('\n', playlistName, 'already exists\n')  # if playlist exist
     playlist_row = df.loc[df['name'] == playlistName].squeeze()
@@ -61,15 +63,28 @@ def addTracks(username: str, playlistRow: pd.Series, trackList: list):
 
 
 def combinePlaylists(playlistNames: list, playlistName: str):  # TODO: add likevekt
-    df = pd.read_csv('exports/playlistSongs.csv')
+    df = pd.read_csv('filtered/songs_root.csv')
     id_list = df.loc[df['origin'].isin(playlistNames)]['id'].tolist()
     tracks = trackifyIDs(id_list)
     # TODO: remove duplicates from tracks
-    generatePlaylist(playlistName, tracks, 'generated/generatedPlaylists.csv')
+    generatePlaylist(playlistName, tracks,
+                     'generated/generatedPlaylists.csv', str(playlistNames))
 
 
-# combinePlaylists(['MYSTIKK', 'OMINOUS', "SMELT AF", "🐾 brink hypno"], '🔈 smelt ominous mystikk')
+def createAtomicSupersets():
+    combinePlaylists(['KAYA', 'MYSTIKK', 'RO', 'LETT RO',
+                    'LETT MANTRA', 'HENGIVEN RO', 'HENGIVEN'], '🔈 mantric')
 
-# 5cccWTfWOylPRItyGM0pND og 5v8tkWxBbFuRwpS7ou18SN var i en liste men ble satt som missing
-missingDF = pd.read_csv('output/missing.csv')
-generatePlaylist("<missing liked>", trackifyIDs(missingDF['id']), 'generated/generatedPlaylists.csv')
+    combinePlaylists(['THROTTLE BACK', 'THROTTLE UP', ':D', 'OMINOUS', 'MINACIOUS',
+                    'OVERDRIVE', 'MALICIOUS', 'LONG-HAUL', 'DUNK DUNK DUNK DUNK', 'CREPEZILLA'], '🔈 avionics')
+
+
+    combinePlaylists(['ETHNO', 'LATINO MYSTIKK', 'ORGANIC LATINO LAXBEAT', 'ØSTLIG MYSTIKK', 'INDOARAB TRIBAL TECHNO',
+                    'SYNESTHESIA', 'SOARING', 'INFECTED', 'SMELT AF', 'LOOPY AF', 'PLAYFUL', 'DANK AF', 'CHILL AF'], '🔈 hominin')
+
+    combinePlaylists(['THICC HAZE', 'LIGHT HAZE', 'DOPE & MOODY', 'MOODY & CHILL HAZE', 'LIGHT & CHILL HAZE'], '🔈 haze')
+
+# missingDF = pd.read_csv('output/missing.csv')
+# generatePlaylist("<missing liked>", trackifyIDs(missingDF['id']), 'generated/generatedPlaylists.csv')
+
+combinePlaylists(['DOPE & MOODY', 'MOODY & CHILL HAZE', 'LIGHT & CHILL HAZE'], '🔈 HERO REALMS 2')
