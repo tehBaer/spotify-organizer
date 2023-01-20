@@ -1,6 +1,5 @@
 import setup
 from utils import *
-from IPython.display import display
 
 sp = setup.setScope('user-library-read playlist-read-private')
 
@@ -88,9 +87,10 @@ def getSongsInCommon(fileA: str, fileB: str) -> pd.DataFrame:
 def getMissingLiked():
     liked = pd.read_csv('fetched/songs_liked.csv')
     atmoified = pd.read_csv('filtered/songs_atomic.csv')
-    missing = liked.loc[~liked['title'].isin(atmoified['title'])]
-    # missing = liked.loc[~liked['title'].isin(atmoified['title'])]
-    #TODO also check if it is in an input list
+    inputSongs = pd.read_csv('filtered/songs_input.csv')
+
+    missing1 = liked.loc[~liked['title'].isin(atmoified['title'])]
+    missing = missing1.loc[~missing1['title'].isin(inputSongs['title'])] # Funker denne?
     # TODO check if Pink Floyd
     return missing
 
@@ -123,3 +123,11 @@ def analyze():
 
 # fetchAndFilter()
 # analyze()
+# getMissingLiked().to_csv('output/missing.csv', index=False)
+
+
+
+
+print("DONE")
+
+"""Sonic Riots og Eoth var på 'missing liked'"""

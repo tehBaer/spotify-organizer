@@ -3,7 +3,6 @@ from spotipy.oauth2 import SpotifyOAuth
 import os
 from dotenv import load_dotenv
 import pandas as pd
-from IPython.display import display
 import re
 import utils
 
