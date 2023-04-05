@@ -1,8 +1,7 @@
 import setup
 from utils import *
 from IPython.display import display
-# from read import *
-import read
+from read import getSongsFromPlaylist
 import math
 import random
 
@@ -38,7 +37,7 @@ def addTracks(username: str, playlistRow: pd.Series, trackList: list):
 
     # API caps at 100 at a time
     # finds and removes current tracks
-    currentTracks = read.getSongsFromPlaylist(playlistRow)
+    currentTracks = getSongsFromPlaylist(playlistRow)
     i=1
     while len(currentTracks) > 0:
         tracks = trackifyIDs(currentTracks['id'])
@@ -49,7 +48,7 @@ def addTracks(username: str, playlistRow: pd.Series, trackList: list):
         # sp.user_playlist_add_tracks(username, playlistRow['id'], tracks)
         sp.user_playlist_remove_all_occurrences_of_tracks(
             username, playlistRow['id'], next100)
-        currentTracks = read.getSongsFromPlaylist(playlistRow)
+        currentTracks = getSongsFromPlaylist(playlistRow)
 
     # add tracks
     times = math.ceil(len(trackList) / 100)
@@ -84,7 +83,5 @@ def createAtomicSupersets():
 
     combinePlaylists(['THICC HAZE', 'LIGHT HAZE', 'DOPE & MOODY', 'MOODY & CHILL HAZE', 'LIGHT & CHILL HAZE'], '🔈 haze')
 
-missingDF = pd.read_csv('output/missing.csv')
-generatePlaylist("<missing liked>", trackifyIDs(missingDF['id']), 'generated/generatedPlaylists.csv')
-
-# combinePlaylists(['DOPE & MOODY', 'MOODY & CHILL HAZE', 'LIGHT & CHILL HAZE'], '🔈 HERO REALMS 2')
+# missingDF = pd.read_csv('output/missing.csv')
+# generatePlaylist("<missing liked>", trackifyIDs(missingDF['id']), 'generated/generatedPlaylists.csv')

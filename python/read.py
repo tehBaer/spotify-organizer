@@ -37,7 +37,7 @@ def fetchLikedTracks(amount=10000) -> pd.DataFrame:
 
 def getSongsFromPlaylist(playlist_row: pd.Series) -> pd.DataFrame:
     print("Extracting songs from ", playlist_row['name'])
-    rawList = sp.user_playlist('bjorntehbear', playlist_row['id'], fields='tracks')[
+    rawList = sp.user_playlist('bjorntehbear', playlist_id=playlist_row['id'], fields='tracks')[ #this one
         'tracks']['items']
     songList = formatAndFramify(rawList, playlist_row['name'])
     return songList
@@ -120,14 +120,3 @@ def analyze():
     getSongsInCommon('filtered/songs_atomic.csv',
                      'filtered/songs_input.csv').to_csv('output/alreadySaved.csv', index=False)
     getMissingLiked().to_csv('output/missing.csv', index=False)
-
-# fetchAndFilter()
-# analyze()
-# getMissingLiked().to_csv('output/missing.csv', index=False)
-
-
-
-
-print("DONE")
-
-"""Sonic Riots og Eoth var på 'missing liked'"""
