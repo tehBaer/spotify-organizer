@@ -3,7 +3,7 @@ from utils import *
 
 sp = setup.setScope('user-library-read playlist-read-private')
 
-def fetchAllPlaylists(amount: int):
+def FetchAllPlaylists(amount: int) -> pd.DataFrame:
     print("\nFetching playlists: ")
     playlists=[]
     for offset in range(0, amount, 50):
@@ -13,7 +13,7 @@ def fetchAllPlaylists(amount: int):
     print("Playlists fetched. ")
     return pd.DataFrame(playlists, columns=['name', 'url', 'id'])
 
-def fetchLikedTracks(amount=10000) -> pd.DataFrame:
+def FetchLikedTracks(amount=10000) -> pd.DataFrame:
     print("\nFetching liked tracks: ")
 
     limit_step = 50
@@ -35,46 +35,53 @@ def fetchLikedTracks(amount=10000) -> pd.DataFrame:
     return formatAndFramify(tracks)
 
 
-def getSongsFromPlaylist(playlist_row: pd.Series) -> pd.DataFrame:
+def GetSongsFromPlaylist(playlist_row: pd.Series) -> pd.DataFrame:
     print("Extracting songs from ", playlist_row['name'])
-    rawList = sp.user_playlist('bjorntehbear', playlist_id=playlist_row['id'], fields='tracks')[ #this one
+    rawList = sp.user_playlist('bjorntehbear', playlist_id=playlist_row['id'], fields='tracks')[ 
         'tracks']['items']
     songList = formatAndFramify(rawList, playlist_row['name'])
     return songList
 
 
-def fetchSongsFromMultiplePlaylists(playlistOverviewFile: str) -> pd.DataFrame:
+def FetchSongsFromMultiplePlaylists(playlistOverviewFile: str) -> pd.DataFrame:
     df = pd.read_csv(playlistOverviewFile)
     allSongs = pd.DataFrame(columns=['title', 'artist', 'id', 'origin'])
     for i, row in df.iterrows():
-        songs = getSongsFromPlaylist(row)
+        songs = GetSongsFromPlaylist(row)
         allSongs = pd.concat([allSongs, songs], ignore_index=True)
         # print("?")
         # print(i)
     return allSongs
 
 
-def getRootPlaylists() -> pd.DataFrame:
+def GetRootPlaylists() -> pd.DataFrame:
     df = pd.read_csv('fetched/playlists_all.csv')
     startIndex = df.index[df['name']=="__start__"].tolist()[0]
     stopIndex = df.index[df['name']=="__stop__"].tolist()[0]
     return df[startIndex+1:stopIndex]
 
-def getAtomicPlaylists():
+def GetAtomicPlaylists():
     df = pd.read_csv('filtered/playlists_root.csv')
     return df[df.name.str[0].str.isalpha()]
 
-def getInputPlaylists():
+def GetInputPlaylists():
     df = pd.read_csv('fetched/playlists_all.csv')
     return df[df.name.str[0] == "["]
 
-def getDuplicates(songFile: str) -> pd.DataFrame:
+def GetDuplicates(songFile: str) -> pd.DataFrame:
     df = pd.read_csv(songFile)
     title = df["title"]  # can also use id for "true" duplicates
     return df[title.isin(title[title.duplicated()])].sort_values("title")
 
+def GetANotInB(aTracks: pd.Series, bTracks: pd.Series) -> pd.Series:
+    # returns tracks from aTracks that are not in bTracks
+    x = ~aTracks.isin(bTracks)
+    return aTracks[x]
 
-def getSongsInCommon(fileA: str, fileB: str) -> pd.DataFrame:
+
+
+
+def GetSongsInCommon(fileA: str, fileB: str) -> pd.DataFrame:
     dfa = pd.read_csv(fileA)
     dfb = pd.read_csv(fileB)
 
@@ -84,7 +91,7 @@ def getSongsInCommon(fileA: str, fileB: str) -> pd.DataFrame:
     return pd.concat([inner, inner2]).sort_values(by=['title'])
 
 
-def getMissingLiked():
+def GetMissingLiked():
     liked = pd.read_csv('fetched/songs_liked.csv')
     atmoified = pd.read_csv('filtered/songs_atomic.csv')
     inputSongs = pd.read_csv('filtered/songs_input.csv')
@@ -95,28 +102,28 @@ def getMissingLiked():
     return missing
 
 
-def fetchAndFilter():
-    fetchAllPlaylists(1000).to_csv('fetched/playlists_all.csv', index=False)
+def FetchAndFilter():
+    FetchAllPlaylists(1000).to_csv('fetched/playlists_all.csv', index=False)
 
-    getRootPlaylists().to_csv('filtered/playlists_root.csv', index=False)
-    getAtomicPlaylists().to_csv('filtered/playlists_atomic.csv', index=False)
-    getInputPlaylists().to_csv('filtered/playlists_input.csv', index=False)
+    GetRootPlaylists().to_csv('filtered/playlists_root.csv', index=False)
+    GetAtomicPlaylists().to_csv('filtered/playlists_atomic.csv', index=False)
+    GetInputPlaylists().to_csv('filtered/playlists_input.csv', index=False)
 
-    fetchLikedTracks().to_csv("fetched/songs_liked.csv", index=False)
+    FetchLikedTracks().to_csv("fetched/songs_liked.csv", index=False)
 
-    fetchSongsFromMultiplePlaylists(
+    FetchSongsFromMultiplePlaylists(
         'filtered/playlists_root.csv').to_csv('filtered/songs_root.csv', index=False)
 
     # TODO: ineffektivt. De to neste burde filtrere, ikke fetche alle sangene på nytt
-    fetchSongsFromMultiplePlaylists(
+    FetchSongsFromMultiplePlaylists(
         'filtered/playlists_atomic.csv').to_csv('filtered/songs_atomic.csv', index=False)
 
-    fetchSongsFromMultiplePlaylists(
+    FetchSongsFromMultiplePlaylists(
         'filtered/playlists_input.csv').to_csv('filtered/songs_input.csv', index=False)
 
-def analyze():
-    getDuplicates(
+def Analyze():
+    GetDuplicates(
         'filtered/songs_atomic.csv').to_csv('output/songs_atomic_duplicates.csv', index=False)
-    getSongsInCommon('filtered/songs_atomic.csv',
+    GetSongsInCommon('filtered/songs_atomic.csv',
                      'filtered/songs_input.csv').to_csv('output/alreadySaved.csv', index=False)
-    getMissingLiked().to_csv('output/missing.csv', index=False)
+    GetMissingLiked().to_csv('output/missing.csv', index=False)
