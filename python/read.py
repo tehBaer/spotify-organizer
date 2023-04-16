@@ -2,6 +2,7 @@ import setup
 from utils import *
 
 sp = setup.setScope('user-library-read playlist-read-private')
+username = "bjorntehbear"
 
 def FetchAllPlaylists(amount: int) -> pd.DataFrame:
     print("\nFetching playlists: ")
@@ -36,11 +37,29 @@ def FetchLikedTracks(amount=10000) -> pd.DataFrame:
 
 
 def GetSongsFromPlaylist(playlist_row: pd.Series) -> pd.DataFrame:
+    # print(playlist_row)
     print("Extracting songs from ", playlist_row['name'])
-    rawList = sp.user_playlist('bjorntehbear', playlist_id=playlist_row['id'], fields='tracks')[ 
-        'tracks']['items']
-    songList = formatAndFramify(rawList, playlist_row['name'])
+    # rawList = sp.user_playlist('bjorntehbear', playlist_id=playlist_row['id'], fields='tracks')[ 
+    #     'tracks']['items']
+    results = sp.user_playlist_tracks(username,playlist_row['id'])
+    tracks = results['items']
+    while results['next']:
+        results = sp.next(results)
+        tracks.extend(results['items'])
+        print("Extracing more songs")
+    
+    songList = formatAndFramify(tracks, playlist_row['name'])
     return songList
+
+# def GetSongsFromPlaylist(username: str, playlist_row: pd.Series) -> pd.DataFrame:
+#     # print(playlist_row)
+#     print("Extracting songs from ", playlist_row['name'])
+#     # TODO: rawlist only returns 100, FIX!!!!!
+#     rawList = sp.user_playlist('bjorntehbear', playlist_id=playlist_row['id'], fields='tracks')[ 
+#         'tracks']['items']
+#     songList = formatAndFramify(rawList, playlist_row['name'])
+#     return songList
+
 
 
 def FetchSongsFromMultiplePlaylists(playlistOverviewFile: str) -> pd.DataFrame:
@@ -75,6 +94,8 @@ def GetDuplicates(songFile: str) -> pd.DataFrame:
 
 def GetANotInB(aTracks: pd.Series, bTracks: pd.Series) -> pd.Series:
     # returns tracks from aTracks that are not in bTracks
+    print(aTracks)
+    print(bTracks)
     x = ~aTracks.isin(bTracks)
     return aTracks[x]
 
@@ -103,21 +124,29 @@ def GetMissingLiked():
 
 
 def FetchAndFilter():
+    print("A")
     FetchAllPlaylists(1000).to_csv('fetched/playlists_all.csv', index=False)
 
+    print("B")
     GetRootPlaylists().to_csv('filtered/playlists_root.csv', index=False)
+    print("C")
     GetAtomicPlaylists().to_csv('filtered/playlists_atomic.csv', index=False)
+    print("D")
     GetInputPlaylists().to_csv('filtered/playlists_input.csv', index=False)
 
+    print("E")
     FetchLikedTracks().to_csv("fetched/songs_liked.csv", index=False)
 
+    print("F")
     FetchSongsFromMultiplePlaylists(
         'filtered/playlists_root.csv').to_csv('filtered/songs_root.csv', index=False)
 
     # TODO: ineffektivt. De to neste burde filtrere, ikke fetche alle sangene på nytt
+    print("G")
     FetchSongsFromMultiplePlaylists(
         'filtered/playlists_atomic.csv').to_csv('filtered/songs_atomic.csv', index=False)
 
+    print("H")
     FetchSongsFromMultiplePlaylists(
         'filtered/playlists_input.csv').to_csv('filtered/songs_input.csv', index=False)
 
@@ -127,3 +156,5 @@ def Analyze():
     GetSongsInCommon('filtered/songs_atomic.csv',
                      'filtered/songs_input.csv').to_csv('output/alreadySaved.csv', index=False)
     GetMissingLiked().to_csv('output/missing.csv', index=False)
+
+

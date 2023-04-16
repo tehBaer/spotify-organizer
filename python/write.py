@@ -1,19 +1,19 @@
 import setup
 from utils import *
 from IPython.display import display
-from read import GetSongsFromPlaylist, GetANotInB
+from read import GetSongsFromPlaylist, GetANotInB, FetchAndFilter, Analyze
 import math
 import random
 
-sp = setup.setScope('playlistInfo-modify-public')
-# 'bea61a6c02774488' = "bea61a6c02774488"
+sp = setup.setScope('playlist-modify-public')
+username = 'bjorntehbear'
 
 
 def GeneratePlaylist(outPlaylistName: str, tracks: list, playlistCSV: str, desc=""):
     # TODO: add "tracks" as dataframe(?)
     df = pd.read_csv(playlistCSV)
     if df[df['name'].isin([outPlaylistName])].empty:  # if playlistInfo does not exist
-        response = sp.user_playlist_create('bea61a6c02774488', outPlaylistName)
+        response = sp.user_playlist_create(username, outPlaylistName)
         x = pd.Series([response['name'], response['external_urls']
                       ['spotify'], response['id']], index=['name', 'url', 'id'])
 
@@ -28,8 +28,8 @@ def GeneratePlaylist(outPlaylistName: str, tracks: list, playlistCSV: str, desc=
         print('\n', outPlaylistName, 'already exists\n')  # if playlistInfo exist
     
     # playListInfo is a row of the playlistInfo's name, url and id
-    playlistInfo = df.loc[df['name'] == outPlaylistName].squeeze()
-    UpdatePlaylist(playlistInfo, tracks)
+    playlist_row = df.loc[df['name'] == outPlaylistName].squeeze()
+    UpdatePlaylist('bjorntehbear', playlist_row, tracks)
 
 
 def TrackifyIDs(id_list: list) -> list:
@@ -38,24 +38,26 @@ def TrackifyIDs(id_list: list) -> list:
 
 
 
-def UpdatePlaylist(playlistInfo: pd.Series, updatedTracks: list):
+def UpdatePlaylist(username: str, playlistInfo: pd.Series, updatedTracks: list):
     
-    originalTracks = GetSongsFromPlaylist(playlistInfo)
-    # compare updatedTracks to current content of currentracks
-    newTracks = GetANotInB(pd.Series(updatedTracks), originalTracks['id'])
-    tracksToRemove = GetANotInB(originalTracks['id'], pd.Series(updatedTracks))
-    print(tracksToRemove)
+    originalTracks = GetSongsFromPlaylist(playlistInfo) # only outputs 100
+    print("number of original tracks", len(originalTracks))
 
-    # finds and removes current tracks (API throttles to 100 per call)
+    print("number of updated tracks", len(updatedTracks))
 
-    while len(tracksToRemove) > 0: # TODO: only do this for songs to be removed, not everything
-        tracks = TrackifyIDs(tracksToRemove)
-        print("removing songs")
-        next100 = tracks[:100]
-        tracks = tracks[100:]
-        # sp.user_playlist_add_tracks(playlistInfo['id'], tracks)
-        sp.user_playlist_remove_all_occurrences_of_tracks(user = 'bea61a6c02774488', playlist_id=playlistInfo['id'], tracks=next100)
-        tracksToRemove = GetANotInB(originalTracks['id'], pd.Series(updatedTracks))
+    newTracks = GetANotInB(pd.Series(updatedTracks), pd.Series(TrackifyIDs(originalTracks['id'])))
+    print("new tracks to add: ", len(newTracks))
+    # display(originalTracks)
+
+    # tracksToRemove = GetANotInB(originalTracks['id'], pd.Series(updatedTracks))
+    # print("tracks to remove: ", len(tracksToRemove))
+
+    # trackIDsToRemove = TrackifyIDs(tracksToRemove)
+    # while len(trackIDsToRemove) > 0: # TODO: only do this for songs to be removed, not everything
+    #     next100 = trackIDsToRemove[:100]
+    #     print("removing ", len(next100),  "songs")
+    #     sp.user_playlist_remove_all_occurrences_of_tracks(username, playlist_id=playlistInfo['id'], tracks=next100)
+    #     trackIDsToRemove = trackIDsToRemove[100:]
 
     random.shuffle(newTracks)
 
@@ -66,7 +68,7 @@ def UpdatePlaylist(playlistInfo: pd.Series, updatedTracks: list):
         print("adding " + str(i+1) + "00 of " + str(size2))
         next100 = newTracks[:100]
         newTracks = newTracks[100:]
-        sp.user_playlist_add_tracks('bea61a6c02774488', playlistInfo['id'], next100)
+        sp.user_playlist_add_tracks(username, playlistInfo['id'], next100)
         i += 1
 
 
@@ -92,18 +94,28 @@ def CreateAtomicSupersets():
 
     CombinePlaylists(['THICC HAZE', 'LIGHT HAZE', 'DOPE & MOODY', 'MOODY & CHILL HAZE', 'LIGHT & CHILL HAZE'], '🔈 haze')
 
-liked = pd.read_csv('fetched/songs_liked.csv')
-root = pd.read_csv('filtered/songs_root.csv')
 
-missing = pd.read_csv('output/missing.csv')
+# FetchAndFilter()
+# Analyze()
 
-input = pd.read_csv('filtered/songs_input.csv')
-GeneratePlaylist("<missing liked>", TrackifyIDs(missing['id']), 'generated/generatedPlaylists.csv')
+# liked = pd.read_csv('fetched/songs_liked.csv')
+# root = pd.read_csv('filtered/songs_root.csv')
+# atomic = pd.read_csv('filtered/songs_atomic.csv')
+# missing = pd.read_csv('output/missing.csv')
+# GeneratePlaylist("<missing liked>", TrackifyIDs(missing['id']), 'generated/generatedPlaylists.csv')
 
-# x = GetANotInB(input['id'], root['id'])
-# x = GetANotInB(root['id'], input['id'])
+df = pd.read_csv('filtered/songs_root.csv')
+new_id_list = df.loc[df['origin'].isin(['new'])]['id'].tolist()
+print(new_id_list)
+GeneratePlaylist("oldAndNew", TrackifyIDs(new_id_list), 'generated/generatedPlaylists.csv')
 
 
-# x = GetANotInB(root['id'], missing['id'])
+# input = pd.read_csv('filtered/songs_input.csv')
+
+# x = GetANotInB(input['id'], atomic['id'])
+# x = GetANotInB(atomic['id'], input['id'])
+
+
+# x = GetANotInB(atomic['id'], missing['id'])
 
 # x.to_csv('output/testing.csv', index=False) # why isnt this typeset
